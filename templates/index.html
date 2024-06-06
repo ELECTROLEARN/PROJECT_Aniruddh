@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROJECT</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>PROJECT</h1>
+    <button id="micButton">Start Listening</button>
+    <p id="status"></p>
+    <p id="response"></p>
+
+    <script>
+        $(document).ready(function() {
+            $('#micButton').click(function() {
+                $('#status').text('Listening...');
+                $.ajax({
+                    url: '/process',
+                    type: 'POST',
+                    success: function(data) {
+                        $('#status').text('');
+                        $('#response').text(data.response);
+                    },
+                    error: function() {
+                        $('#status').text('An error occurred.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+ 
