@@ -3,6 +3,7 @@ import speech_recognition as sr
 from gtts import gTTS
 import wikipedia
 import os
+import pygame
 
 app = Flask(__name__)
 
@@ -11,7 +12,11 @@ listener = sr.Recognizer()
 def talk(text):
     tts = gTTS(text=text, lang='en')
     tts.save("response.mp3")
-    os.system("mpg321 response.mp3")
+    pygame.mixer.init()
+    pygame.mixer.music.load("response.mp3")
+    pygame.mixer.music.play()
+    while pygame.mixer.music.get_busy():
+        pygame.time.Clock().tick(10)
 
 def take_command():
     command = ""

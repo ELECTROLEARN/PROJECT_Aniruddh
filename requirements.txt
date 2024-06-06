@@ -2,3 +2,4 @@ Flask
 SpeechRecognition
 wikipedia
 gtts
+pygame
