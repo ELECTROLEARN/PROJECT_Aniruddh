@@ -18,20 +18,27 @@ def take_command():
     try:
         with sr.Microphone() as source:
             print("Listening...")
-            voice = listener.listen(source)
+            listener.adjust_for_ambient_noise(source)
+            voice = listener.listen(source, timeout=10, phrase_time_limit=10)
             print("Recognizing...")
             command = listener.recognize_google(voice)
             command = command.lower()
             if 'project' in command:
                 command = command.replace('project', '')
-                print(command)
+                print(f"Command: {command}")
+    except sr.WaitTimeoutError:
+        print("Listening timed out while waiting for phrase to start.")
+    except sr.UnknownValueError:
+        print("Google Speech Recognition could not understand audio")
+    except sr.RequestError as e:
+        print(f"Could not request results from Google Speech Recognition service; {e}")
     except Exception as e:
         print(f"Error: {e}")
     return command
 
 def run_project():
     command = take_command()
-    print(command)
+    print(f"Received Command: {command}")
     response = ""
     if 'hello' in command:
         response = 'Hello there !!, How are you ??'
@@ -66,6 +73,7 @@ def index():
 @app.route('/process', methods=['POST'])
 def process():
     response = run_project()
+    talk(response)
     return jsonify({'response': response})
 
 if __name__ == '__main__':
