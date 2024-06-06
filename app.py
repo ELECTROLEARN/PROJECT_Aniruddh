@@ -3,7 +3,6 @@ import speech_recognition as sr
 from gtts import gTTS
 import wikipedia
 import os
-import pygame
 
 app = Flask(__name__)
 
@@ -82,4 +81,7 @@ def process():
     return jsonify({'response': response})
 
 if __name__ == '__main__':
+    os.environ["SDL_AUDIODRIVER"] = "dummy"
+    import pygame
+    pygame.init()
     app.run(host='0.0.0.0', port=5000)
