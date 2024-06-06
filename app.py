@@ -26,6 +26,7 @@ def take_command():
             voice = listener.listen(source, timeout=10, phrase_time_limit=10)
             print("Recognizing...")
             command = listener.recognize_google(voice)
+            print("Recognized Speech:", command)  # Add this line to print the recognized speech text
             command = command.lower()
             if 'project' in command:
                 command = command.replace('project', '')
@@ -39,6 +40,7 @@ def take_command():
     except Exception as e:
         print(f"Error: {e}")
     return command
+
 
 def run_project():
     command = take_command()
