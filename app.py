@@ -1,18 +1,17 @@
 from flask import Flask, render_template, request, jsonify
 import speech_recognition as sr
-import pyttsx3
+from gtts import gTTS
 import wikipedia
+import os
 
 app = Flask(__name__)
 
 listener = sr.Recognizer()
-engine = pyttsx3.init()
-voices = engine.getProperty('voices')
-engine.setProperty('voice', voices[0].id)
 
 def talk(text):
-    engine.say(text)
-    engine.runAndWait()
+    tts = gTTS(text=text, lang='en')
+    tts.save("response.mp3")
+    os.system("mpg321 response.mp3")
 
 def take_command():
     command = ""
@@ -45,8 +44,13 @@ def run_project():
     elif 'who is' in command:
         response = 'Getting results !!!'
         person = command.replace('who is', '')
-        info = wikipedia.summary(person, 1)
-        response += " " + info
+        try:
+            info = wikipedia.summary(person, 1)
+            response += " " + info
+        except wikipedia.exceptions.DisambiguationError as e:
+            response += " Multiple results found. Be more specific."
+        except wikipedia.exceptions.PageError:
+            response += " No information available on this person."
     elif 'fine' in command:
         response = "Nice to meet you by the way!! What's your name??"
     elif "bye" in command:
@@ -66,4 +70,3 @@ def process():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
- 

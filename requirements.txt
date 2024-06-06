@@ -1,4 +1,4 @@
 Flask
 SpeechRecognition
-pyttsx3
 wikipedia
+gtts
