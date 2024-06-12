@@ -1,5 +1,5 @@
-Flask
-SpeechRecognition
-wikipedia
-gtts
-pygame
+Flask==2.0.1
+SpeechRecognition==3.8.1
+pyttsx3==2.90
+wikipedia-api==0.5.4
+

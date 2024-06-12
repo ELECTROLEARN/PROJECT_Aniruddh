@@ -1,89 +1,64 @@
-from flask import Flask, render_template, request, jsonify
 import speech_recognition as sr
-from gtts import gTTS
+from flask import Flask, request, jsonify, render_template
+import pyttsx3
 import wikipedia
-import os
 
 app = Flask(__name__)
 
-listener = sr.Recognizer()
+engine = pyttsx3.init()
+voices = engine.getProperty('voices')
+engine.setProperty('voice', voices[0].id)
 
 def talk(text):
-    tts = gTTS(text=text, lang='en')
-    tts.save("response.mp3")
-    pygame.mixer.init()
-    pygame.mixer.music.load("response.mp3")
-    pygame.mixer.music.play()
-    while pygame.mixer.music.get_busy():
-        pygame.time.Clock().tick(10)
-
-def take_command():
-    command = ""
-    try:
-        with sr.Microphone() as source:
-            print("Listening...")
-            listener.adjust_for_ambient_noise(source)
-            voice = listener.listen(source, timeout=10, phrase_time_limit=10)
-            print("Recognizing...")
-            command = listener.recognize_google(voice)
-            print("Recognized Speech:", command)  # Add this line to print the recognized speech text
-            command = command.lower()
-            if 'project' in command:
-                command = command.replace('project', '')
-                print(f"Command: {command}")
-    except sr.WaitTimeoutError:
-        print("Listening timed out while waiting for phrase to start.")
-    except sr.UnknownValueError:
-        print("Google Speech Recognition could not understand audio")
-    except sr.RequestError as e:
-        print(f"Could not request results from Google Speech Recognition service; {e}")
-    except Exception as e:
-        print(f"Error: {e}")
-    return command
-
-
-def run_project():
-    command = take_command()
-    print(f"Received Command: {command}")
-    response = ""
-    if 'hello' in command:
-        response = 'Hello there !!, How are you ??'
-    elif 'name' in command:
-        response = 'I am --- !!! , powerfully designed by -----'
-    elif 'nice' in command:
-        response = 'Thats great !!!! , Nice to Assist You By the Way!!!'
-    elif 'designed' in command:
-        response = 'I am Designed By ------ Team but!!!!!!!!!, I ESPECIALLY THANK ---- Because ---- Powerfully Coded me !!'
-    elif 'who is' in command:
-        response = 'Getting results !!!'
-        person = command.replace('who is', '')
-        try:
-            info = wikipedia.summary(person, 1)
-            response += " " + info
-        except wikipedia.exceptions.DisambiguationError as e:
-            response += " Multiple results found. Be more specific."
-        except wikipedia.exceptions.PageError:
-            response += " No information available on this person."
-    elif 'fine' in command:
-        response = "Nice to meet you by the way!! What's your name??"
-    elif "bye" in command:
-        response = 'Bye !! Have a Nice Day !!'
-    else:
-        response = 'I cannot listen !!!!, Try saying it Properly'
-    return response
+    if not engine.isBusy():
+        engine.say(text)
+        engine.runAndWait()
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+@app.route('/listen', methods=['POST'])
+def listen():
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Listening...")
+        recognizer.adjust_for_ambient_noise(source)
+        audio_data = recognizer.listen(source, timeout=10, phrase_time_limit=10)
+        print("Recognizing...")
+        try:
+            command = recognizer.recognize_google(audio_data).lower()
+            return jsonify({'command': command})
+        except sr.UnknownValueError:
+            return jsonify({'command': ''})
+        except sr.RequestError:
+            return jsonify({'command': ''})
+
 @app.route('/process', methods=['POST'])
-def process():
-    response = run_project()
+def process_command():
+    data = request.get_json()
+    command = data.get('command', '').lower()
+    response = ""
+    if 'hello' in command:
+        response = 'Hello there !!, How are you ??'
+    elif 'name' in command:
+        response = 'I am Eron !!! , powerfully designed by Aniruddh'
+    elif 'nice' in command:
+        response = 'Thats great !!!! , Nice to Assist You By the Way!!!'
+    elif 'who is aniruddh' in command or 'who is anirudh' in command:
+        response = 'Thats My creator !!!!!, I thank to him'
+    elif 'designed' in command:
+        response = 'I am Designed By Emergent Robotics Operating Network Team but!!!!!!!!!, I Thank especially Aniruddh Because He Powerfully Coded me !!'
+    elif 'who is' in command:
+        person = command.replace('who is', '')
+        response = wikipedia.summary(person, 1)
+    elif 'bye' in command:
+        response = "Nice to assist you!!"
+    else:
+        response = 'I cannot listen !!!!, Try saying it Properly'
+
     talk(response)
     return jsonify({'response': response})
 
 if __name__ == '__main__':
-    os.environ["SDL_AUDIODRIVER"] = "dummy"
-    import pygame
-    pygame.init()
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)

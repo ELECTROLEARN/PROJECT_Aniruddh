@@ -3,33 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROJECT</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Project Name</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-color: purple; /* Set initial background color */
+            color: black; /* Set text color to black */
+            animation: colorChange 10s infinite alternate; /* Animate background color */
+        }
+
+        @keyframes colorChange {
+            0% {
+                background-color: purple;
+            }
+            50% {
+                background-color: lightblue;
+            }
+            100% {
+                background-color: white;
+            }
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .heading {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .mic-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            cursor: pointer;
+            animation: micBounce 2s infinite;
+        }
+
+        @keyframes micBounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-20px);
+            }
+            60% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .animated-text {
+            font-size: 1.5em;
+            animation: textAnimation 6s infinite;
+        }
+
+        @keyframes textAnimation {
+            0%, 100% { opacity: 0; }
+            25% { opacity: 1; }
+            50% { opacity: 0; }
+            75% { opacity: 1; }
+        }
+
+        .response {
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h1>PROJECT</h1>
-    <button id="micButton">Start Listening</button>
-    <p id="status"></p>
-    <p id="response"></p>
+    <div class="container">
+        <div class="heading">Project Name</div>
+        <div class="mic-icon" onclick="toggleListening()">🎤</div>
+        <div class="animated-text">Think Different. Build the Future with Robots.</div>
+        <div id="response-text" class="response" style="display: none;"></div>
+        <div id="listening-text" class="response" style="display: none;">Listening...</div>
+    </div>
 
     <script>
-        $(document).ready(function() {
-            $('#micButton').click(function() {
-                $('#status').text('Listening...');
-                $.ajax({
-                    url: '/process',
-                    type: 'POST',
-                    success: function(data) {
-                        $('#status').text('');
-                        $('#response').text(data.response);
-                    },
-                    error: function() {
-                        $('#status').text('An error occurred.');
-                    }
+        async function toggleListening() {
+            const listeningText = document.getElementById('listening-text');
+            const responseText = document.getElementById('response-text');
+            if (listeningText.style.display === 'none') {
+                listeningText.style.display = 'block';
+                const response = await fetch('/listen', {
+                    method: 'POST'
                 });
+                const data = await response.json();
+                if (data.command) {
+                    processCommand(data.command);
+                } else {
+                    alert('I cannot listen !!!!, Try saying it Properly');
+                }
+            } else {
+                listeningText.style.display = 'none';
+                responseText.style.display = 'none';
+                responseText.innerText = '';
+                const synth = window.speechSynthesis;
+                synth.cancel();
+            }
+        }
+
+        async function processCommand(command) {
+            const listeningText = document.getElementById('listening-text');
+            const responseText = document.getElementById('response-text');
+            const synth = window.speechSynthesis;
+            const response = await fetch('/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ command: command })
             });
-        });
+            const data = await response.json();
+            listeningText.style.display = 'none';
+            responseText.style.display = 'block';
+            responseText.innerText = data.response;
+            speakResponse(data.response);
+        }
+
+        function speakResponse(response) {
+            const synth = window.speechSynthesis;
+            const utterance = new SpeechSynthesisUtterance(response);
+            synth.speak(utterance);
+        }
     </script>
 </body>
 </html>
- 
